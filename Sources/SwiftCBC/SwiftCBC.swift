@@ -91,18 +91,15 @@ class Model {
         }
     }
 
-    func specialOrderedSet(_ sos: SpecialOrderedSet) {
-        switch sos {
-        case .type1(let variables):
-            Cbc_addSOS(
-                model,
-                1, // numRows
-                [0, Int32(variables.count)], // rowStarts
-                variables.map(\.index), // colIndices
-                variables.enumerated().map({_ in 0}), // weights
-                1 // type
-            )
-        }
+    func specialOrderedSet1(_ variables: [Variable]) {
+        Cbc_addSOS(
+            model,
+            1, // numRows
+            [0, Int32(variables.count)], // rowStarts
+            variables.map(\.index), // colIndices
+            variables.enumerated().map({_ in 0}), // weights
+            1 // type
+        )
     }
 
     func bestSolution() -> Solution? {
@@ -192,7 +189,7 @@ struct Variable: Hashable, Expression, CustomDebugStringConvertible {
     }
 
     var debugDescription: String {
-        name
+        return name
     }
 }
 
@@ -201,7 +198,21 @@ enum VariableType {
     case double
 }
 
-struct AdditionExpression: Expression {
+struct AdditionExpression: Expression, CustomDebugStringConvertible {
+    var debugDescription: String {
+        coefficients.sorted(by: {$0.key?.name ?? "" < $1.key?.name ?? ""}).map { variable, coefficient in
+            if let variable = variable {
+                if coefficient == 1 {
+                    return variable.debugDescription
+                } else {
+                    return "\(coefficient) * \(variable.debugDescription)"
+                }
+            } else {
+                return "\(coefficient)"
+            }
+        }.joined(separator: " + ")
+    }
+
     let coefficients: [Variable?: Double]
 
     init() {
@@ -238,10 +249,6 @@ enum Objective {
     case minimize(Expression)
     case maximize(Expression)
     case ignore
-}
-
-enum SpecialOrderedSet {
-    case type1([Variable])
 }
 
 protocol Expression {
