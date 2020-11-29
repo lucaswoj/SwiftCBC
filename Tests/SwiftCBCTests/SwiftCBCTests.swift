@@ -6,7 +6,13 @@ final class SwiftCBCTests: XCTestCase {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
-        XCTAssertEqual(SwiftCBC().text, "Hello, World!")
+
+        let model = Model()
+        let a = model.variable("a", .integer, lowerBound: 0)
+        let b = model.variable("b", .integer, lowerBound: 0)
+        model.constraint(a + b == 2)
+        model.objective(.maximize(a))
+        XCTAssertEqual(model.bestSolution(), [a: 2, b: 0])
     }
 
     static var allTests = [
