@@ -1,4 +1,4 @@
-import Ccbc
+import cbc
 
 public class Model {
     let model: UnsafeMutableRawPointer

@@ -1,4 +1,4 @@
-module Ccbc [system] {
+module cbc [system] {
     header "/usr/local/Cellar/cbc/2.10.5/include/cbc/coin/Cbc_C_interface.h"
     export *
     link "cbc"
