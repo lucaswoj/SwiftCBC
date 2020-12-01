@@ -176,17 +176,17 @@ public struct Sum: Expression, CustomDebugStringConvertible {
         }.joined(separator: " + ")
     }
 
-    let terms: [Variable?: Double]
+    public let terms: [Variable?: Double]
 
-    init() {
+    public init() {
         self.terms = [:]
     }
 
-    init(_ variables: [Variable]) {
+    public init(_ variables: [Variable]) {
         self.terms = variables.reduce(into: [:]) { $0[$1] = 1 }
     }
 
-    init(_ terms: [Variable?: Double]) {
+    public init(_ terms: [Variable?: Double]) {
         self.terms = terms
     }
 
