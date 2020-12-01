@@ -1,17 +1,17 @@
 import cbc
 
-class Model {
+public class Model {
     let model: UnsafeMutableRawPointer
     var variables = [Variable]()
 
-    init(name: String = "") {
+    public init(name: String = "") {
         self.model = Cbc_newModel()
         Cbc_setProblemName(model, name)
         Cbc_setLogLevel(model, 0)
         objective(.ignore)
     }
 
-    func variable(
+    public func variable(
         _ name: String,
         _ type: VariableType,
         lowerBound: Double = -.infinity,
@@ -35,7 +35,7 @@ class Model {
         return variable
     }
 
-    func constraint(_ constraint: Constraint, name: String = "") {
+    public func constraint(_ constraint: Constraint, name: String = "") {
         switch constraint {
         case .lessThanOrEqual(let expression):
             self.constraint(expression, "L", name)
@@ -64,7 +64,7 @@ class Model {
         )
     }
 
-    func objective(_ objective: Objective) {
+    public func objective(_ objective: Objective) {
         switch objective {
         case .maximize(let expression):
             Cbc_setObjSense(model, -1)
@@ -91,7 +91,7 @@ class Model {
         }
     }
 
-    func specialOrderedSet1(_ variables: [Variable]) {
+    public func specialOrderedSet1(_ variables: [Variable]) {
         Cbc_addSOS(
             model,
             1, // numRows
@@ -102,17 +102,10 @@ class Model {
         )
     }
 
-    func bestSolution() -> Solution? {
+    public func bestSolution() -> Solution? {
         Cbc_solve(model)
-        return solution(Cbc_bestSolution(model))
-    }
 
-    func solutions() -> SolutionsIterable {
-        Cbc_solve(model)
-        return SolutionsIterable(model: self)
-    }
-
-    func solution(_ solutionPointer: UnsafePointer<Double>?) -> Solution? {
+        let solutionPointer = Cbc_bestSolution(model)
         guard solutionPointer != nil else { return nil }
 
         let solutionArray = Array(UnsafeBufferPointer(
@@ -139,67 +132,37 @@ class Model {
     // TODO support cutoff
 }
 
-struct SolutionsIterable: Sequence {
-    let model: Model
+public typealias Solution = [Variable: Double]
 
-    func makeIterator() -> SolutionsIterator {
-        return SolutionsIterator(model)
-    }
-}
-
-struct SolutionsIterator: IteratorProtocol {
-    typealias Element = Solution
-
-    var index: Int32
-    let count: Int32
-    let model: Model
-
-    init(_ model: Model) {
-        self.index = 0
-        self.count = Cbc_numberSavedSolutions(model.model)
-        self.model = model
-    }
-
-    mutating func next() -> Solution? {
-        guard index < count else { return nil }
-
-        let solution = model.solution(Cbc_savedSolution(model.model, index))
-        index += 1
-        return solution
-    }
-}
-
-typealias Solution = [Variable: Double]
-
-struct Variable: Hashable, Expression, CustomDebugStringConvertible {
+public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
     let index: Int32
     let name: String
 
-    init(index: Int32, name: String) {
+    public init(index: Int32, name: String) {
         self.index = index
         self.name = name
     }
 
-    static func == (lhs: Variable, rhs: Variable) -> Bool {
+    public static func == (lhs: Variable, rhs: Variable) -> Bool {
         lhs.index == rhs.index
     }
 
-    var sum: Sum {
+    public var sum: Sum {
         Sum([self: 1])
     }
 
-    var debugDescription: String {
+    public var debugDescription: String {
         return name
     }
 }
 
-enum VariableType {
+public enum VariableType {
     case integer
     case double
 }
 
-struct Sum: Expression, CustomDebugStringConvertible {
-    var debugDescription: String {
+public struct Sum: Expression, CustomDebugStringConvertible {
+    public var debugDescription: String {
         terms.sorted(by: {$0.key?.name ?? "" < $1.key?.name ?? ""}).map { variable, coefficient in
             if let variable = variable {
                 if coefficient == 1 {
@@ -227,59 +190,59 @@ struct Sum: Expression, CustomDebugStringConvertible {
         self.terms = terms
     }
 
-    var sum: Sum {
+    public var sum: Sum {
         self
     }
 }
 
 extension Double: Expression {
-    var sum: Sum {
+    public var sum: Sum {
         Sum([nil: self])
     }
 }
 
-enum Constraint {
+public enum Constraint {
     case lessThanOrEqual(Expression)
     case greaterThanOrEqual(Expression)
     case equal(Expression)
     // TODO add ranged and free types
 }
 
-enum Objective {
+public enum Objective {
     case minimize(Expression)
     case maximize(Expression)
     case ignore
 }
 
-protocol Expression {
+public protocol Expression {
     var sum: Sum { get }
 }
 
-func * (lhs: Double, rhs: Expression) -> Sum {
+public func * (lhs: Double, rhs: Expression) -> Sum {
     return rhs * lhs
 }
 
-func * (lhsExpression: Expression, rhs: Double) -> Sum {
+public func * (lhsExpression: Expression, rhs: Double) -> Sum {
     let lhs = lhsExpression.sum
     return Sum(lhs.terms.mapValues { $0 * rhs })
 }
 
-func + (lhs: Expression, rhs: Expression) -> Sum {
+public func + (lhs: Expression, rhs: Expression) -> Sum {
     return Sum(lhs.sum.terms.merging(rhs.sum.terms) { $0 + $1 })
 }
 
-func - (lhs: Expression, rhs: Expression) -> Sum {
+public func - (lhs: Expression, rhs: Expression) -> Sum {
     return lhs + -1 * rhs
 }
 
-func <= (lhs: Expression, rhs: Expression) -> Constraint {
+public func <= (lhs: Expression, rhs: Expression) -> Constraint {
     return .lessThanOrEqual(lhs - rhs)
 }
 
-func >= (lhs: Expression, rhs: Expression) -> Constraint {
+public func >= (lhs: Expression, rhs: Expression) -> Constraint {
     return .greaterThanOrEqual(lhs - rhs)
 }
 
-func == (lhs: Expression, rhs: Expression) -> Constraint {
+public func == (lhs: Expression, rhs: Expression) -> Constraint {
     return .equal(lhs - rhs)
 }
