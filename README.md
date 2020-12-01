@@ -42,21 +42,27 @@ If you need a more programmatic way to construct constraints you can use the `Su
 The `Sum` class has one constructor that takes an array of variables and sums them together
 ```swift
 let model = Model()
-let variables = (0..<50).map {
-  model.variable("v\($0)", .integer, lowerBound: 0, upperBound: 1)
-}
-model.constraint(Sum(variables) == 50)
+let variables = [
+  model.variable("a", .integer, lowerBound: 0, upperBound: 1),
+  model.variable("b", .integer, lowerBound: 0, upperBound: 1),
+  model.variable("c", .integer, lowerBound: 0, upperBound: 1)
+]
+model.constraint(Sum(variables) == 3)
 ```
 
 You can use a `Sum` in conjunction with other expression operators
 
 ```swift
-5 * Sum(variables) + 2 * variables[2] == 10 - Sum(variables)
+let a = variables[0]
+let b = variables[1]
+let c = variables[2]
+
+5 * Sum(variables) + 2 * c == 10 - Sum(variables)
 ```
 
-You can assign coefficients to individual terms in the sum by passing a dictionary instead of an array
+You can assign coefficients to terms in the sum by passing a dictionary instead of an array
 ```swift
-Sum([variables[1]: 5, variables[2]: 2])
+Sum([a: 5, c: 2]) // 5b + 2c
 ```
 
 ## Installation
