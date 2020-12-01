@@ -33,6 +33,30 @@ model.constraint(john + 5 == 3 * (alice + 5))
 XCTAssertEqual(model.bestSolution()?[peter], 5)
 ```
 
+## More Complex Example
+
+If you need a more programmatic way to construct constraints you can use the `Sum` class.
+
+The `Sum` class has one constructor that takes an array of variables and sums them together
+```swift
+let model = Model()
+let variables = (0..<50).map {
+  model.variable("v\($0)", .integer, lowerBound: 0, upperBound: 1)
+}
+model.constraint(Sum(variables) == 50)
+```
+
+You can use a `Sum` in conjunction with other expression operators
+
+```swift
+5 * Sum(variables) + 2 * variables[2] == 10 - Sum(variables)
+```
+
+You can assign coefficients to individual terms in the sum by passing a dictionary instead of an array
+```swift
+Sum([variables[1]: 5, variables[2]: 2])
+```
+
 ## Installation
 
 This package can be installed using the Swift Package Manager.
