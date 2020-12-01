@@ -69,3 +69,4 @@ This is alpha quality software. Specific issues that need attention:
  - iOS compatibility
  - test coverage
  - documentation
+ - GrandDispatch multi-threading support
