@@ -1,7 +1,7 @@
 import Ccbc
 
 class Model {
-    let model: UnsafeMutableRawPointer!
+    let model: UnsafeMutableRawPointer
     var variables = [Variable]()
 
     init(name: String = "") {
@@ -49,9 +49,9 @@ class Model {
     }
 
     private func constraint(_ expression: Expression, _ sense: String, _ name: String) {
-        let additionExpression = expression.additionExpression
-        let coefficients = additionExpression.coefficients.filter { $0.key != nil }
-        let constant = -1 * (additionExpression.coefficients[nil] ?? 0)
+        let additionExpression = expression.sum
+        let coefficients = additionExpression.terms.filter { $0.key != nil }
+        let constant = -1 * (additionExpression.terms[nil] ?? 0)
 
         Cbc_addRow(
             model,
@@ -68,23 +68,23 @@ class Model {
         switch objective {
         case .maximize(let expression):
             Cbc_setObjSense(model, -1)
-            self.objective(expression.additionExpression)
+            self.objective(expression.sum)
 
         case .minimize(let expressionable):
             Cbc_setObjSense(model, 1)
-            self.objective(expressionable.additionExpression)
+            self.objective(expressionable.sum)
 
         case .ignore:
             Cbc_setObjSense(model, 0)
         }
     }
 
-    private func objective(_ expression: AdditionExpression) {
+    private func objective(_ expression: Sum) {
         for variable in variables {
             Cbc_setObjCoeff(model, variable.index, 0)
         }
 
-        for (variable, coefficient) in expression.coefficients {
+        for (variable, coefficient) in expression.terms {
             if let variable = variable {
                 Cbc_setObjCoeff(model, variable.index, coefficient)
             }
@@ -184,8 +184,8 @@ struct Variable: Hashable, Expression, CustomDebugStringConvertible {
         lhs.index == rhs.index
     }
 
-    var additionExpression: AdditionExpression {
-        AdditionExpression([self: 1])
+    var sum: Sum {
+        Sum([self: 1])
     }
 
     var debugDescription: String {
@@ -198,9 +198,9 @@ enum VariableType {
     case double
 }
 
-struct AdditionExpression: Expression, CustomDebugStringConvertible {
+struct Sum: Expression, CustomDebugStringConvertible {
     var debugDescription: String {
-        coefficients.sorted(by: {$0.key?.name ?? "" < $1.key?.name ?? ""}).map { variable, coefficient in
+        terms.sorted(by: {$0.key?.name ?? "" < $1.key?.name ?? ""}).map { variable, coefficient in
             if let variable = variable {
                 if coefficient == 1 {
                     return variable.debugDescription
@@ -213,28 +213,28 @@ struct AdditionExpression: Expression, CustomDebugStringConvertible {
         }.joined(separator: " + ")
     }
 
-    let coefficients: [Variable?: Double]
+    let terms: [Variable?: Double]
 
     init() {
-        self.coefficients = [:]
+        self.terms = [:]
     }
 
     init(_ variables: [Variable]) {
-        self.coefficients = variables.reduce(into: [:]) { $0[$1] = 1 }
+        self.terms = variables.reduce(into: [:]) { $0[$1] = 1 }
     }
 
-    init(_ coefficients: [Variable?: Double]) {
-        self.coefficients = coefficients
+    init(_ terms: [Variable?: Double]) {
+        self.terms = terms
     }
 
-    var additionExpression: AdditionExpression {
+    var sum: Sum {
         self
     }
 }
 
 extension Double: Expression {
-    var additionExpression: AdditionExpression {
-        AdditionExpression([nil: self])
+    var sum: Sum {
+        Sum([nil: self])
     }
 }
 
@@ -252,25 +252,23 @@ enum Objective {
 }
 
 protocol Expression {
-    var additionExpression: AdditionExpression { get }
+    var sum: Sum { get }
 }
 
-func * (lhs: Double, rhs: Expression) -> AdditionExpression {
+func * (lhs: Double, rhs: Expression) -> Sum {
     return rhs * lhs
 }
 
-func * (lhsExpression: Expression, rhs: Double) -> AdditionExpression {
-    let lhs = lhsExpression.additionExpression
-    return AdditionExpression(lhs.coefficients.mapValues { $0 * rhs })
+func * (lhsExpression: Expression, rhs: Double) -> Sum {
+    let lhs = lhsExpression.sum
+    return Sum(lhs.terms.mapValues { $0 * rhs })
 }
 
-func + (lhsExpression: Expression, rhsExpression: Expression) -> AdditionExpression {
-    let lhs = lhsExpression.additionExpression
-    let rhs = rhsExpression.additionExpression
-    return AdditionExpression(lhs.coefficients.merging(rhs.coefficients) { $0 + $1 })
+func + (lhs: Expression, rhs: Expression) -> Sum {
+    return Sum(lhs.sum.terms.merging(rhs.sum.terms) { $0 + $1 })
 }
 
-func - (lhs: Expression, rhs: Expression) -> AdditionExpression {
+func - (lhs: Expression, rhs: Expression) -> Sum {
     return lhs + -1 * rhs
 }
 
