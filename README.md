@@ -9,6 +9,8 @@ CBC is a [constraint solver](https://en.wikipedia.org/wiki/Constraint_programmin
 | linear inequalities | ✔️ | ✔️ |
 | discrete domains | ✔️ | |
 | [special ordered sets](https://en.wikipedia.org/wiki/Special_ordered_set) | ✔️ | |
+| optimization function | ✔️ | |
+| constraint strength | | ✔️ |
 
 ## Example
 
