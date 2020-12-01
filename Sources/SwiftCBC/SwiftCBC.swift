@@ -222,9 +222,16 @@ public func * (lhs: Double, rhs: Expression) -> Sum {
     return rhs * lhs
 }
 
-public func * (lhsExpression: Expression, rhs: Double) -> Sum {
-    let lhs = lhsExpression.sum
-    return Sum(lhs.terms.mapValues { $0 * rhs })
+public func * (lhs: Expression, rhs: Double) -> Sum {
+    return Sum(lhs.sum.terms.mapValues { $0 * rhs })
+}
+
+public func / (lhs: Double, rhs: Expression) -> Sum {
+    return rhs / lhs
+}
+
+public func / (lhs: Expression, rhs: Double) -> Sum {
+    return lhs * (1 / rhs)
 }
 
 public func + (lhs: Expression, rhs: Expression) -> Sum {
