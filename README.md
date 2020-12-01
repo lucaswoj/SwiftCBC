@@ -66,5 +66,6 @@ This package can be installed using the Swift Package Manager.
 This is alpha quality software. Specific issues that need attention:
 
  - building CBC from source rather than relying on a separate system library
+ - iOS compatibility
  - test coverage
  - documentation
