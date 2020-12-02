@@ -4,10 +4,10 @@ public class Model {
     let model: UnsafeMutableRawPointer
     var variables = [Variable]()
 
-    public init(name: String = "") {
+    public init(name: String = "", logLevel: Int32 = 0) {
         self.model = Cbc_newModel()
         Cbc_setProblemName(model, name)
-        Cbc_setLogLevel(model, 0)
+        Cbc_setLogLevel(model, logLevel)
         objective(.ignore)
     }
 
@@ -102,20 +102,9 @@ public class Model {
         )
     }
 
-    public func bestSolution() -> Solution? {
+    public func bestSolution() -> Solution {
         Cbc_solve(model)
-
-        let solutionPointer = Cbc_bestSolution(model)
-        guard solutionPointer != nil else { return nil }
-
-        let solutionArray = Array(UnsafeBufferPointer(
-            start: solutionPointer,
-            count: variables.count
-        ))
-
-        return solutionArray.enumerated().reduce(into: [:]) { (solution, value) in
-            solution[variables[value.0]] = value.1
-        }
+        return Solution(model: self)
     }
 
     deinit {
@@ -132,7 +121,39 @@ public class Model {
     // TODO support cutoff
 }
 
-public typealias Solution = [Variable: Double]
+public struct Solution {
+    public let model: Model
+
+    public var variables: [Variable: Double]? {
+        let solutionPointer = Cbc_bestSolution(model.model)
+        guard solutionPointer != nil else { return nil }
+
+        let solutionArray = Array(UnsafeBufferPointer(
+            start: solutionPointer,
+            count: model.variables.count
+        ))
+
+        return solutionArray.enumerated().reduce(into: [:]) {(solution, value) in
+            solution[model.variables[value.0]] = value.1
+        }
+    }
+
+    public var iterationCount: Int32 { Cbc_getIterationCount(model.model) }
+    public var isContinuousUnbounded: Bool { Cbc_isContinuousUnbounded(model.model) == 1 }
+    public var isNodeLimitReached: Bool { Cbc_isNodeLimitReached(model.model) == 1 }
+    public var isSecondsLimitReached: Bool { Cbc_isSecondsLimitReached(model.model) == 1 }
+    public var isSolutionLimitReached: Bool { Cbc_isSolutionLimitReached(model.model) == 1 }
+    public var isInitialSolveAbandoned: Bool { Cbc_isInitialSolveAbandoned(model.model) == 1 }
+    public var isInitialSolveProvenOptimal: Bool { Cbc_isInitialSolveProvenOptimal(model.model) == 1 }
+    public var isInitialSolveProvenPrimalInfeasible: Bool { Cbc_isInitialSolveProvenOptimal(model.model) == 1 }
+    public var objectiveValue: Double { Cbc_getObjValue(model.model) }
+    public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(model.model) }
+    public var nodeCount: Int32 { Cbc_getNodeCount(model.model) }
+    public var status: Int32 { Cbc_status(model.model) }
+    public var secondaryStatus: Int32 { Cbc_secondaryStatus(model.model) }
+
+    func print() { Cbc_printSolution(model.model) }
+}
 
 public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
     let index: Int32

@@ -7,7 +7,7 @@ final class ModelTests: XCTestCase {
         let a = model.variable("a", .integer)
         model.constraint(a == 17)
 
-        XCTAssertEqual(model.bestSolution(), [a: 17])
+        XCTAssertEqual(model.bestSolution().variables, [a: 17])
     }
 
     func testAdditionConstraint() {
@@ -16,7 +16,7 @@ final class ModelTests: XCTestCase {
         let b = model.variable("b", .integer)
         model.constraint(a + b == 17)
 
-        XCTAssertEqual(model.bestSolution(), [a: 10, b: 7])
+        XCTAssertEqual(model.bestSolution().variables, [a: 10, b: 7])
     }
 
     func testMultiplicationConstraint() {
@@ -24,7 +24,7 @@ final class ModelTests: XCTestCase {
         let a = model.variable("a", .integer)
         model.constraint(2 * a == 20)
 
-        XCTAssertEqual(model.bestSolution(), [a: 10])
+        XCTAssertEqual(model.bestSolution().variables, [a: 10])
     }
 
     func testSpecialOrderedSet() {
@@ -34,7 +34,7 @@ final class ModelTests: XCTestCase {
         model.constraint(a + b == 17)
         model.specialOrderedSet1([a, b])
 
-        XCTAssertEqual(model.bestSolution(), [a: 0, b: 17])
+        XCTAssertEqual(model.bestSolution().variables, [a: 0, b: 17])
     }
 
     func testObjectiveMaximize() {
@@ -44,7 +44,7 @@ final class ModelTests: XCTestCase {
         model.constraint(a + b == 17)
         model.objective(.maximize(b))
 
-        XCTAssertEqual(model.bestSolution(), [a: 0, b: 17])
+        XCTAssertEqual(model.bestSolution().variables, [a: 0, b: 17])
     }
 
     func testWordProblem1() {
@@ -56,7 +56,7 @@ final class ModelTests: XCTestCase {
         let luther = model.variable("luter", .integer)
         model.constraint(martin == 4 * luther)
         model.constraint(martin + 10 == 2 * (luther + 10))
-        XCTAssertEqual(model.bestSolution(), [martin: 20, luther: 5])
+        XCTAssertEqual(model.bestSolution().variables, [martin: 20, luther: 5])
     }
 
     func testWordProblem2() {
@@ -65,7 +65,7 @@ final class ModelTests: XCTestCase {
         let model = Model()
         let john = model.variable("john", .integer)
         model.constraint(john - 5 == 0.5 * (john + 8))
-        XCTAssertEqual(model.bestSolution(), [john: 18])
+        XCTAssertEqual(model.bestSolution().variables, [john: 18])
     }
 
     func testWordProblem3() {
@@ -79,7 +79,7 @@ final class ModelTests: XCTestCase {
         model.constraint(john == 2 * peter)
         model.constraint(peter == 5 + alice)
         model.constraint(john + 5 == 3 * (alice + 5))
-        XCTAssertEqual(model.bestSolution()![peter], 5)
+        XCTAssertEqual(model.bestSolution().variables![peter], 5)
     }
 
     static var allTests = [
