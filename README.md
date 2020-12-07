@@ -22,17 +22,17 @@ Suppose you wanted to use SwiftCBC to solve this word problem:
 You could convert the word problem into a series of variables and constraints and then let the solver determine everyone's ages
 
 ```swift
-let model = Model()
+let solver = Solver()
 
-let john = model.variable("john", .integer)
-let peter = model.variable("john", .integer)
-let alice = model.variable("john", .integer)
+let john = solver.variable("john", .integer)
+let peter = solver.variable("john", .integer)
+let alice = solver.variable("john", .integer)
 
-model.constraint(john == 2 * peter)
-model.constraint(peter == 5 + alice)
-model.constraint(john + 5 == 3 * (alice + 5))
+solver.constraint(john == 2 * peter)
+solver.constraint(peter == 5 + alice)
+solver.constraint(john + 5 == 3 * (alice + 5))
 
-XCTAssertEqual(model.bestSolution()?[peter], 5)
+XCTAssertEqual(solver.bestSolution()?[peter], 5)
 ```
 
 ## More Complex Example
@@ -41,13 +41,13 @@ If you need a more programmatic way to construct constraints you can use the `Su
 
 The `Sum` class has one constructor that takes an array of variables and sums them together
 ```swift
-let model = Model()
+let solver = solver()
 let variables = [
-  model.variable("a", .integer, lowerBound: 0, upperBound: 1),
-  model.variable("b", .integer, lowerBound: 0, upperBound: 1),
-  model.variable("c", .integer, lowerBound: 0, upperBound: 1)
+  solver.variable("a", .integer, lowerBound: 0, upperBound: 1),
+  solver.variable("b", .integer, lowerBound: 0, upperBound: 1),
+  solver.variable("c", .integer, lowerBound: 0, upperBound: 1)
 ]
-model.constraint(Sum(variables) == 3)
+solver.constraint(Sum(variables) == 3)
 ```
 
 You can use a `Sum` in conjunction with other expression operators

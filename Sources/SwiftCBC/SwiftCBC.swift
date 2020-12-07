@@ -1,13 +1,13 @@
 import cbc
 
-public class Model {
-    let model: UnsafeMutableRawPointer
+public class Solver {
+    let cbc: UnsafeMutableRawPointer
     var variables = [Variable]()
 
     public init(name: String = "", logLevel: Int32 = 0) {
-        self.model = Cbc_newModel()
-        Cbc_setProblemName(model, name)
-        Cbc_setLogLevel(model, logLevel)
+        self.cbc = Cbc_newModel()
+        Cbc_setProblemName(cbc, name)
+        Cbc_setLogLevel(cbc, logLevel)
         objective(.ignore)
     }
 
@@ -19,7 +19,7 @@ public class Model {
     ) -> Variable {
 
         Cbc_addCol(
-            model,
+            cbc,
             name,
             lowerBound, // lower bound
             upperBound, // upper bound
@@ -54,7 +54,7 @@ public class Model {
         let constant = -1 * (additionExpression.terms[nil] ?? 0)
 
         Cbc_addRow(
-            model,
+            cbc,
             name,
             Int32(coefficients.count), // variable count
             coefficients.map { $0.key!.index }, // variable indicies
@@ -67,33 +67,33 @@ public class Model {
     public func objective(_ objective: Objective) {
         switch objective {
         case .maximize(let expression):
-            Cbc_setObjSense(model, -1)
+            Cbc_setObjSense(cbc, -1)
             self.objective(expression.sum)
 
         case .minimize(let expressionable):
-            Cbc_setObjSense(model, 1)
+            Cbc_setObjSense(cbc, 1)
             self.objective(expressionable.sum)
 
         case .ignore:
-            Cbc_setObjSense(model, 0)
+            Cbc_setObjSense(cbc, 0)
         }
     }
 
     private func objective(_ expression: Sum) {
         for variable in variables {
-            Cbc_setObjCoeff(model, variable.index, 0)
+            Cbc_setObjCoeff(cbc, variable.index, 0)
         }
 
         for (variable, coefficient) in expression.terms {
             if let variable = variable {
-                Cbc_setObjCoeff(model, variable.index, coefficient)
+                Cbc_setObjCoeff(cbc, variable.index, coefficient)
             }
         }
     }
 
     public func specialOrderedSet1(_ variables: [Variable]) {
         Cbc_addSOS(
-            model,
+            cbc,
             1, // numRows
             [0, Int32(variables.count)], // rowStarts
             variables.map(\.index), // colIndices
@@ -103,12 +103,12 @@ public class Model {
     }
 
     public func bestSolution() -> Solution {
-        Cbc_solve(model)
-        return Solution(model: self)
+        Cbc_solve(cbc)
+        return Solution(solver: self)
     }
 
     deinit {
-        Cbc_deleteModel(model)
+        Cbc_deleteModel(cbc)
     }
 
     // TODO support allowable gap
@@ -122,37 +122,37 @@ public class Model {
 }
 
 public struct Solution {
-    public let model: Model
+    public let solver: Solver
 
     public var variables: [Variable: Double]? {
-        let solutionPointer = Cbc_bestSolution(model.model)
+        let solutionPointer = Cbc_bestSolution(solver.cbc)
         guard solutionPointer != nil else { return nil }
 
         let solutionArray = Array(UnsafeBufferPointer(
             start: solutionPointer,
-            count: model.variables.count
+            count: solver.variables.count
         ))
 
         return solutionArray.enumerated().reduce(into: [:]) {(solution, value) in
-            solution[model.variables[value.0]] = value.1
+            solution[solver.variables[value.0]] = value.1
         }
     }
 
-    public var iterationCount: Int32 { Cbc_getIterationCount(model.model) }
-    public var isContinuousUnbounded: Bool { Cbc_isContinuousUnbounded(model.model) == 1 }
-    public var isNodeLimitReached: Bool { Cbc_isNodeLimitReached(model.model) == 1 }
-    public var isSecondsLimitReached: Bool { Cbc_isSecondsLimitReached(model.model) == 1 }
-    public var isSolutionLimitReached: Bool { Cbc_isSolutionLimitReached(model.model) == 1 }
-    public var isInitialSolveAbandoned: Bool { Cbc_isInitialSolveAbandoned(model.model) == 1 }
-    public var isInitialSolveProvenOptimal: Bool { Cbc_isInitialSolveProvenOptimal(model.model) == 1 }
-    public var isInitialSolveProvenPrimalInfeasible: Bool { Cbc_isInitialSolveProvenOptimal(model.model) == 1 }
-    public var objectiveValue: Double { Cbc_getObjValue(model.model) }
-    public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(model.model) }
-    public var nodeCount: Int32 { Cbc_getNodeCount(model.model) }
-    public var status: Int32 { Cbc_status(model.model) }
-    public var secondaryStatus: Int32 { Cbc_secondaryStatus(model.model) }
+    public var iterationCount: Int32 { Cbc_getIterationCount(solver.cbc) }
+    public var isContinuousUnbounded: Bool { Cbc_isContinuousUnbounded(solver.cbc) == 1 }
+    public var isNodeLimitReached: Bool { Cbc_isNodeLimitReached(solver.cbc) == 1 }
+    public var isSecondsLimitReached: Bool { Cbc_isSecondsLimitReached(solver.cbc) == 1 }
+    public var isSolutionLimitReached: Bool { Cbc_isSolutionLimitReached(solver.cbc) == 1 }
+    public var isInitialSolveAbandoned: Bool { Cbc_isInitialSolveAbandoned(solver.cbc) == 1 }
+    public var isInitialSolveProvenOptimal: Bool { Cbc_isInitialSolveProvenOptimal(solver.cbc) == 1 }
+    public var isInitialSolveProvenPrimalInfeasible: Bool { Cbc_isInitialSolveProvenOptimal(solver.cbc) == 1 }
+    public var objectiveValue: Double { Cbc_getObjValue(solver.cbc) }
+    public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(solver.cbc) }
+    public var nodeCount: Int32 { Cbc_getNodeCount(solver.cbc) }
+    public var status: Int32 { Cbc_status(solver.cbc) }
+    public var secondaryStatus: Int32 { Cbc_secondaryStatus(solver.cbc) }
 
-    func print() { Cbc_printSolution(model.model) }
+    func print() { Cbc_printSolution(solver.cbc) }
 }
 
 public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
