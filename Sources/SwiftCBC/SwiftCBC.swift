@@ -212,8 +212,10 @@ public struct Sum: Expression, CustomDebugStringConvertible {
         self.terms = [:]
     }
 
-    public init(_ variables: [Variable]) {
-        self.terms = variables.reduce(into: [:]) { $0[$1] = 1 }
+    public init(_ expressions: [Expression]) {
+        self.terms = expressions.reduce([Variable?: Double]()) { terms, expression in
+            expression.sum.terms.merging(terms) { $0 + $1 }
+        }
     }
 
     public init(_ terms: [Variable?: Double]) {
@@ -280,7 +282,7 @@ public func / (lhs: Expression, rhs: Double) -> Sum {
 }
 
 public func + (lhs: Expression, rhs: Expression) -> Sum {
-    return Sum(lhs.sum.terms.merging(rhs.sum.terms) { $0 + $1 })
+    return Sum([lhs, rhs])
 }
 
 public func - (lhs: Expression, rhs: Expression) -> Sum {
