@@ -228,11 +228,7 @@ public struct Sum: Expression, CustomDebugStringConvertible {
 
     public func evaluate(_ solution: FeasibleSolution) -> Double {
         terms.reduce(0) { value, element in
-            if let variable = element.key {
-                return variable.evaluate(solution) * element.value + value
-            } else {
-                return element.value + value
-            }
+            return (element.key?.evaluate(solution) ?? 1) * element.value + value
         }
     }
 }
