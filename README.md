@@ -78,3 +78,13 @@ This is alpha quality software. Specific issues that need attention:
  - test coverage
  - documentation
  - GrandDispatch multi-threading support
+ 
+ There are also a number of features supported by CBC without an interface yet
+ 
+  - allowable gap
+  - fraction gap
+  - percentage gap
+  - max seconds
+  - max nodes
+  - max solutions
+  - cutoff

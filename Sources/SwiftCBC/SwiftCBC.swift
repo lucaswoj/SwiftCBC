@@ -104,40 +104,48 @@ public class Solver {
 
     public func bestSolution() -> Solution {
         Cbc_solve(cbc)
-        return Solution(solver: self)
+        if let solutionPointer = Cbc_bestSolution(cbc) {
+            return FeasibleSolution(solver: self, solutionPointer: solutionPointer)
+        } else {
+            return NotFeasibleSoltion(solver: self)
+        }
     }
 
     deinit {
         Cbc_deleteModel(cbc)
     }
-
-    // TODO support allowable gap
-    // TODO support fraction gap
-    // TODO support percentage gap
-    // TODO support max seconds
-    // TODO support max nodes
-    // TODO support max solutions
-    // TODO support customizable log level
-    // TODO support cutoff
 }
 
-public struct Solution {
-    public let solver: Solver
+public protocol Solution {
+    var solver: Solver { get }
+}
 
-    public var variables: [Variable: Double]? {
-        let solutionPointer = Cbc_bestSolution(solver.cbc)
-        guard solutionPointer != nil else { return nil }
+public struct FeasibleSolution: Solution {
+    public let solver: Solver
+    public let variables: [Variable: Double]
+
+    init(solver: Solver, solutionPointer: UnsafeMutablePointer<Double>!) {
+        self.solver = solver
 
         let solutionArray = Array(UnsafeBufferPointer(
-            start: solutionPointer,
+            start: solutionPointer!,
             count: solver.variables.count
         ))
 
-        return solutionArray.enumerated().reduce(into: [:]) {(solution, value) in
+        self.variables = solutionArray.enumerated().reduce(into: [:]) {(solution, value) in
             solution[solver.variables[value.0]] = value.1
         }
     }
 
+    public var objectiveValue: Double { Cbc_getObjValue(solver.cbc) }
+    public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(solver.cbc) }
+}
+
+public struct NotFeasibleSoltion: Solution {
+    public let solver: Solver
+}
+
+extension Solution {
     public var iterationCount: Int32 { Cbc_getIterationCount(solver.cbc) }
     public var isContinuousUnbounded: Bool { Cbc_isContinuousUnbounded(solver.cbc) == 1 }
     public var isNodeLimitReached: Bool { Cbc_isNodeLimitReached(solver.cbc) == 1 }
@@ -146,12 +154,9 @@ public struct Solution {
     public var isInitialSolveAbandoned: Bool { Cbc_isInitialSolveAbandoned(solver.cbc) == 1 }
     public var isInitialSolveProvenOptimal: Bool { Cbc_isInitialSolveProvenOptimal(solver.cbc) == 1 }
     public var isInitialSolveProvenPrimalInfeasible: Bool { Cbc_isInitialSolveProvenOptimal(solver.cbc) == 1 }
-    public var objectiveValue: Double { Cbc_getObjValue(solver.cbc) }
-    public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(solver.cbc) }
     public var nodeCount: Int32 { Cbc_getNodeCount(solver.cbc) }
     public var status: Int32 { Cbc_status(solver.cbc) }
     public var secondaryStatus: Int32 { Cbc_secondaryStatus(solver.cbc) }
-
     func print() { Cbc_printSolution(solver.cbc) }
 }
 
@@ -174,6 +179,10 @@ public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
 
     public var debugDescription: String {
         return name
+    }
+
+    public func evaluate(_ solution: FeasibleSolution) -> Double {
+        solution.variables[self]!
     }
 }
 
@@ -214,11 +223,25 @@ public struct Sum: Expression, CustomDebugStringConvertible {
     public var sum: Sum {
         self
     }
+
+    public func evaluate(_ solution: FeasibleSolution) -> Double {
+        terms.reduce(0) { value, element in
+            if let variable = element.key {
+                return variable.evaluate(solution) * element.value + value
+            } else {
+                return element.value + value
+            }
+        }
+    }
 }
 
 extension Double: Expression {
     public var sum: Sum {
         Sum([nil: self])
+    }
+
+    public func evaluate(_ solution: FeasibleSolution) -> Double {
+        self
     }
 }
 
@@ -237,6 +260,7 @@ public enum Objective {
 
 public protocol Expression {
     var sum: Sum { get }
+    func evaluate(_ solution: FeasibleSolution) -> Double
 }
 
 public func * (lhs: Double, rhs: Expression) -> Sum {

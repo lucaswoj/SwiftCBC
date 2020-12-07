@@ -7,7 +7,7 @@ final class solverTests: XCTestCase {
         let a = solver.variable("a", .integer)
         solver.constraint(a == 17)
 
-        XCTAssertEqual(solver.bestSolution().variables, [a: 17])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 17])
     }
 
     func testAdditionConstraint() {
@@ -16,7 +16,7 @@ final class solverTests: XCTestCase {
         let b = solver.variable("b", .integer)
         solver.constraint(a + b == 17)
 
-        XCTAssertEqual(solver.bestSolution().variables, [a: 10, b: 7])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10, b: 7])
     }
 
     func testMultiplicationConstraint() {
@@ -24,7 +24,7 @@ final class solverTests: XCTestCase {
         let a = solver.variable("a", .integer)
         solver.constraint(2 * a == 20)
 
-        XCTAssertEqual(solver.bestSolution().variables, [a: 10])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10])
     }
 
     func testSpecialOrderedSet() {
@@ -34,7 +34,7 @@ final class solverTests: XCTestCase {
         solver.constraint(a + b == 17)
         solver.specialOrderedSet1([a, b])
 
-        XCTAssertEqual(solver.bestSolution().variables, [a: 0, b: 17])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 0, b: 17])
     }
 
     func testObjectiveMaximize() {
@@ -44,7 +44,7 @@ final class solverTests: XCTestCase {
         solver.constraint(a + b == 17)
         solver.objective(.maximize(b))
 
-        XCTAssertEqual(solver.bestSolution().variables, [a: 0, b: 17])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 0, b: 17])
     }
 
     func testWordProblem1() {
@@ -56,7 +56,7 @@ final class solverTests: XCTestCase {
         let luther = solver.variable("luter", .integer)
         solver.constraint(martin == 4 * luther)
         solver.constraint(martin + 10 == 2 * (luther + 10))
-        XCTAssertEqual(solver.bestSolution().variables, [martin: 20, luther: 5])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [martin: 20, luther: 5])
     }
 
     func testWordProblem2() {
@@ -65,7 +65,7 @@ final class solverTests: XCTestCase {
         let solver = Solver()
         let john = solver.variable("john", .integer)
         solver.constraint(john - 5 == 0.5 * (john + 8))
-        XCTAssertEqual(solver.bestSolution().variables, [john: 18])
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [john: 18])
     }
 
     func testWordProblem3() {
@@ -79,7 +79,7 @@ final class solverTests: XCTestCase {
         solver.constraint(john == 2 * peter)
         solver.constraint(peter == 5 + alice)
         solver.constraint(john + 5 == 3 * (alice + 5))
-        XCTAssertEqual(solver.bestSolution().variables![peter], 5)
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables[peter], 5)
     }
 
     static var allTests = [
