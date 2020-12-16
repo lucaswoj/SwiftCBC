@@ -47,6 +47,22 @@ final class solverTests: XCTestCase {
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 0, b: 17])
     }
 
+    func testRangeConstraintUpper() {
+        let solver = Solver()
+        let a = solver.variable("a", .integer)
+        solver.constraint((1...10).contains(a))
+        solver.objective(.maximize(a))
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10])
+    }
+
+    func testRangeConstraintLower() {
+        let solver = Solver()
+        let a = solver.variable("a", .integer)
+        solver.constraint((1...10).contains(a))
+        solver.objective(.minimize(a))
+        XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 1])
+    }
+
     func testWordProblem1() {
         // Martin is four times as old as his brother Luther at present. After
         // 10 years he will be twice the age of his brother. Find their present

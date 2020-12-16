@@ -3,6 +3,7 @@ import cbc
 public class Solver {
     let cbc: UnsafeMutableRawPointer
     var variables = [Variable]()
+    var constraints = [Constraint]()
 
     public init(name: String = "", logLevel: Int32 = 0) {
         self.cbc = Cbc_newModel()
@@ -45,22 +46,28 @@ public class Solver {
 
         case .equal(let expression):
             self.constraint(expression, "E", name)
+
+        case .range(let expression, let lowerBound, let upperBound):
+            self.constraint(expression, "E", name)
+            Cbc_setRowLower(cbc, Int32(constraints.count), lowerBound)
+            Cbc_setRowUpper(cbc, Int32(constraints.count), upperBound)
         }
+
+        constraints.append(constraint)
     }
 
     private func constraint(_ expression: Expression, _ sense: String, _ name: String) {
-        let additionExpression = expression.sum
-        let coefficients = additionExpression.terms.filter { $0.key != nil }
-        let constant = -1 * (additionExpression.terms[nil] ?? 0)
+        let sum = expression.sum
+        let terms = sum.terms.filter { $0.key != nil }
 
         Cbc_addRow(
             cbc,
             name,
-            Int32(coefficients.count), // variable count
-            coefficients.map { $0.key!.index }, // variable indicies
-            coefficients.map { $0.value }, // variable coefficients
+            Int32(terms.count), // variable count
+            terms.map { $0.key!.index }, // variable indicies
+            terms.map { $0.value }, // variable coefficients
             sense.utf8CString[0], // L if <=, G if >=, E if =, R if ranged and N if free
-            constant // constant rhs value
+            -1 * (sum.terms[nil] ?? 0) // constant rhs value
         )
     }
 
@@ -164,7 +171,7 @@ public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
     let index: Int32
     let name: String
 
-    public init(index: Int32, name: String) {
+    public init(index: Int32, name: String = "") {
         self.index = index
         self.name = name
     }
@@ -188,7 +195,7 @@ public struct Variable: Hashable, Expression, CustomDebugStringConvertible {
 
 public enum VariableType {
     case integer
-    case double
+    case continuous
 }
 
 public struct Sum: Expression, CustomDebugStringConvertible {
@@ -228,7 +235,7 @@ public struct Sum: Expression, CustomDebugStringConvertible {
 
     public func evaluate(_ solution: FeasibleSolution) -> Double {
         terms.reduce(0) { value, element in
-            return (element.key?.evaluate(solution) ?? 1) * element.value + value
+            (element.key?.evaluate(solution) ?? 1) * element.value + value
         }
     }
 }
@@ -247,7 +254,7 @@ public enum Constraint {
     case lessThanOrEqual(Expression)
     case greaterThanOrEqual(Expression)
     case equal(Expression)
-    // TODO add ranged and free types
+    case range(Expression, lowerBound: Double, upperBound: Double)
 }
 
 public enum Objective {
@@ -295,4 +302,16 @@ public func >= (lhs: Expression, rhs: Expression) -> Constraint {
 
 public func == (lhs: Expression, rhs: Expression) -> Constraint {
     return .equal(lhs - rhs)
+}
+
+extension ClosedRange where Bound: BinaryFloatingPoint {
+    func contains(_ expression: Expression) -> Constraint {
+        return .range(expression, lowerBound: Double(lowerBound), upperBound: Double(upperBound))
+    }
+}
+
+extension ClosedRange where Bound: BinaryInteger {
+    func contains(_ expression: Expression) -> Constraint {
+        return .range(expression, lowerBound: Double(lowerBound), upperBound: Double(upperBound))
+    }
 }

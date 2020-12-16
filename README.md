@@ -37,7 +37,7 @@ XCTAssertEqual(solver.bestSolution()?[peter], 5)
 
 ## More Complex Example
 
-If you need a more programmatic way to construct constraints you can use the `Sum` class.
+If you need to construct constraints programmatically you can use the `Sum` class.
 
 The `Sum` class has one constructor that takes an array of variables and sums them together
 ```swift
