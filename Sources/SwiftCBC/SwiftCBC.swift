@@ -304,13 +304,13 @@ public func == (lhs: Expression, rhs: Expression) -> Constraint {
     return .equal(lhs - rhs)
 }
 
-extension ClosedRange where Bound: BinaryFloatingPoint {
+public extension ClosedRange where Bound: BinaryFloatingPoint {
     func contains(_ expression: Expression) -> Constraint {
         return .range(expression, lowerBound: Double(lowerBound), upperBound: Double(upperBound))
     }
 }
 
-extension ClosedRange where Bound: BinaryInteger {
+public extension ClosedRange where Bound: BinaryInteger {
     func contains(_ expression: Expression) -> Constraint {
         return .range(expression, lowerBound: Double(lowerBound), upperBound: Double(upperBound))
     }
