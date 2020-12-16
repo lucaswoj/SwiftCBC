@@ -18,12 +18,20 @@ public class Solver {
         upperBound: Double = .infinity,
         name: String = ""
     ) -> Variable {
+        variable(type, lowerBound...upperBound, name: name)
+    }
+
+    public func variable(
+        _ type: VariableType,
+        _ range: ClosedRange<Double> = (-.infinity...(.infinity)),
+        name: String = ""
+    ) -> Variable {
 
         Cbc_addCol(
             cbc,
             name,
-            lowerBound, // lower bound
-            upperBound, // upper bound
+            range.lowerBound,
+            range.upperBound,
             0, // objective function coefficient (overridden later)
             type == .integer ? 1 : 0, // 1 if variable is integer, 0 otherwise
             0, // row count (overridden later)
@@ -66,7 +74,7 @@ public class Solver {
             Int32(terms.count), // variable count
             terms.map { $0.key!.index }, // variable indicies
             terms.map { $0.value }, // variable coefficients
-            sense.utf8CString[0], // L if <=, G if >=, E if =, R if ranged and N if free
+            sense.utf8CString[0], // L if <=, G if >=, E if =
             -1 * (sum.terms[nil] ?? 0) // constant rhs value
         )
     }

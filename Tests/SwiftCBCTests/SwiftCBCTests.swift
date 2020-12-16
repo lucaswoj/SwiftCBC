@@ -4,7 +4,7 @@ import XCTest
 final class solverTests: XCTestCase {
     func testConstantConstraint() {
         let solver = Solver()
-        let a = solver.variable("a", .integer)
+        let a = solver.variable(.integer)
         solver.constraint(a == 17)
 
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 17])
@@ -12,8 +12,8 @@ final class solverTests: XCTestCase {
 
     func testAdditionConstraint() {
         let solver = Solver()
-        let a = solver.variable("a", .integer, upperBound: 10)
-        let b = solver.variable("b", .integer)
+        let a = solver.variable(.integer, 0...10)
+        let b = solver.variable(.integer)
         solver.constraint(a + b == 17)
 
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10, b: 7])
@@ -21,7 +21,7 @@ final class solverTests: XCTestCase {
 
     func testMultiplicationConstraint() {
         let solver = Solver()
-        let a = solver.variable("a", .integer)
+        let a = solver.variable(.integer)
         solver.constraint(2 * a == 20)
 
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10])
@@ -29,8 +29,8 @@ final class solverTests: XCTestCase {
 
     func testSpecialOrderedSet() {
         let solver = Solver()
-        let a = solver.variable("a", .integer, upperBound: 10)
-        let b = solver.variable("b", .integer)
+        let a = solver.variable(.integer, 0...10)
+        let b = solver.variable(.integer)
         solver.constraint(a + b == 17)
         solver.specialOrderedSet1([a, b])
 
@@ -39,8 +39,8 @@ final class solverTests: XCTestCase {
 
     func testObjectiveMaximize() {
         let solver = Solver()
-        let a = solver.variable("a", .integer, lowerBound: 0, upperBound: 10)
-        let b = solver.variable("b", .integer)
+        let a = solver.variable(.integer, 0...10)
+        let b = solver.variable(.integer)
         solver.constraint(a + b == 17)
         solver.objective(.maximize(b))
 
@@ -49,7 +49,7 @@ final class solverTests: XCTestCase {
 
     func testRangeConstraintUpper() {
         let solver = Solver()
-        let a = solver.variable("a", .integer)
+        let a = solver.variable(.integer)
         solver.constraint((1...10).contains(a))
         solver.objective(.maximize(a))
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 10])
@@ -57,7 +57,7 @@ final class solverTests: XCTestCase {
 
     func testRangeConstraintLower() {
         let solver = Solver()
-        let a = solver.variable("a", .integer)
+        let a = solver.variable(.integer)
         solver.constraint((1...10).contains(a))
         solver.objective(.minimize(a))
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [a: 1])
@@ -68,8 +68,8 @@ final class solverTests: XCTestCase {
         // 10 years he will be twice the age of his brother. Find their present
         // ages.
         let solver = Solver()
-        let martin = solver.variable("martin", .integer)
-        let luther = solver.variable("luter", .integer)
+        let martin = solver.variable(.integer)
+        let luther = solver.variable(.integer)
         solver.constraint(martin == 4 * luther)
         solver.constraint(martin + 10 == 2 * (luther + 10))
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [martin: 20, luther: 5])
@@ -79,7 +79,7 @@ final class solverTests: XCTestCase {
         // Five years ago, John’s age was half of the age he will be in 8 years.
         // How old is he now?
         let solver = Solver()
-        let john = solver.variable("john", .integer)
+        let john = solver.variable(.integer)
         solver.constraint(john - 5 == 0.5 * (john + 8))
         XCTAssertEqual((solver.bestSolution() as? FeasibleSolution)?.variables, [john: 18])
     }
@@ -89,9 +89,9 @@ final class solverTests: XCTestCase {
         // than Alice. In 5 years, John will be three times as old as Alice.
         // How old is Peter now?
         let solver = Solver()
-        let john = solver.variable("john", .integer)
-        let peter = solver.variable("john", .integer)
-        let alice = solver.variable("john", .integer)
+        let john = solver.variable(.integer)
+        let peter = solver.variable(.integer)
+        let alice = solver.variable(.integer)
         solver.constraint(john == 2 * peter)
         solver.constraint(peter == 5 + alice)
         solver.constraint(john + 5 == 3 * (alice + 5))
