@@ -16,7 +16,7 @@ public class Solver {
         _ type: VariableType,
         lowerBound: Double = -.infinity,
         upperBound: Double = .infinity,
-        name: String
+        name: String = ""
     ) -> Variable {
 
         Cbc_addCol(
