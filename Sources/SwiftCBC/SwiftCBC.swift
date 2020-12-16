@@ -13,10 +13,10 @@ public class Solver {
     }
 
     public func variable(
-        _ name: String,
         _ type: VariableType,
         lowerBound: Double = -.infinity,
-        upperBound: Double = .infinity
+        upperBound: Double = .infinity,
+        name: String
     ) -> Variable {
 
         Cbc_addCol(
