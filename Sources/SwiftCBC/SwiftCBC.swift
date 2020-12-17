@@ -122,7 +122,7 @@ public class Solver {
         if let solutionPointer = Cbc_bestSolution(cbc) {
             return FeasibleSolution(solver: self, solutionPointer: solutionPointer)
         } else {
-            return NotFeasibleSoltion(solver: self)
+            return NotFeasibleSolution(solver: self)
         }
     }
 
@@ -156,7 +156,7 @@ public struct FeasibleSolution: Solution {
     public var bestObjectiveValue: Double { Cbc_getBestPossibleObjValue(solver.cbc) }
 }
 
-public struct NotFeasibleSoltion: Solution {
+public struct NotFeasibleSolution: Solution {
     public let solver: Solver
 }
 
