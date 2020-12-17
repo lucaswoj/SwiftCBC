@@ -2,8 +2,8 @@ import cbc
 
 public class Solver {
     let cbc: UnsafeMutableRawPointer
-    var variables = [Variable]()
-    var constraints = [Constraint]()
+    public private(set) var variables = [Variable]()
+    public private(set) var constraints = [Constraint]()
 
     public init(name: String = "", logLevel: Int32 = 0) {
         self.cbc = Cbc_newModel()
