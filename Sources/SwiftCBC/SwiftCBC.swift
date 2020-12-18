@@ -5,6 +5,11 @@ public class Solver {
     public private(set) var variables = [Variable]()
     public private(set) var constraints = [Constraint]()
 
+    var maxSeconds: Double {
+        get { Cbc_getMaximumSeconds(cbc) }
+        set { Cbc_setMaximumSeconds(cbc, newValue) }
+    }
+
     public init(name: String = "", logLevel: Int32 = 0) {
         self.cbc = Cbc_newModel()
         Cbc_setProblemName(cbc, name)
