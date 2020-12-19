@@ -10,6 +10,11 @@ public class Solver {
         set { Cbc_setMaximumSeconds(cbc, newValue) }
     }
 
+    var maxPercentageGap: Double {
+        get { Cbc_getAllowablePercentageGap(cbc) }
+        set { Cbc_setAllowablePercentageGap(cbc, newValue) }
+    }
+
     public init(name: String = "", logLevel: Int32 = 0) {
         self.cbc = Cbc_newModel()
         Cbc_setProblemName(cbc, name)
