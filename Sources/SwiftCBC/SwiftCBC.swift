@@ -5,12 +5,12 @@ public class Solver {
     public private(set) var variables = [Variable]()
     public private(set) var constraints = [Constraint]()
 
-    var maxSeconds: Double {
+    public var maxSeconds: Double {
         get { Cbc_getMaximumSeconds(cbc) }
         set { Cbc_setMaximumSeconds(cbc, newValue) }
     }
 
-    var maxPercentageGap: Double {
+    public var maxPercentageGap: Double {
         get { Cbc_getAllowablePercentageGap(cbc) }
         set { Cbc_setAllowablePercentageGap(cbc, newValue) }
     }
